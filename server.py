@@ -1,7 +1,18 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from typing import Dict, List
 
+from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
+
+# السماح لكل التطبيقات بالاتصال بالسيرفر (للألعاب والمتصفحات)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # كل لعبة سيكون لها غرف متعددة
 games: Dict[str, Dict[str, List[WebSocket]]] = {}
@@ -38,3 +49,10 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, room_name: st
         games[game_name][room_name].remove(websocket)
         for ws in games[game_name][room_name]:
             await ws.send_text(f"{player_name} left {room_name}")
+import os
+import uvicorn
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=True)
+
